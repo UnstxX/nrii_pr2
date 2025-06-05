@@ -44,7 +44,7 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          MESSAGE="Тесты или линтинг провалены"
+          MESSAGE="Тесты или линтинг провалены
           Репозиторий: ${{ github.repository }}
           Workflow: ${{ github.workflow }} #${{ github.run_number }}
           Посмотреть детали: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
