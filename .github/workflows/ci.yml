@@ -1,0 +1,53 @@
+name: Run Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    stategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependensies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Lint with Flake8
+        run: |
+          source venv/bin/activate
+          flake8 . --count --show-source --statistics
+
+      - name: Run tests
+        id: run_pytests
+        run: |
+          source venv/bin/activate
+          pytest
+
+  notify:
+    needs: test
+    runs-on: ubuntu-latest
+    if: always() && (needs.test.result == 'failure')
+    steps:
+      - name: Notify Telegram on failure
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          MESSAGE="Тесты или линтинг провалены"
+          Репозиторий: ${{ github.repository }}
+          Workflow: ${{ github.workflow }} #${{ github.run_number }}
+          Посмотреть детали: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
+            -d chat_id=${TELEGRAM_CHAT_ID} \
+            -d text="$MESSAGE"
